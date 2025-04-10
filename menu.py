@@ -1,0 +1,10 @@
+def show_menu():
+    print("=" * 40)
+    print("     SISTEM PARKIR SEDERHANA")
+    print("=" * 40)
+    print("1. Tambah Kendaraan")
+    print("2. List Kendaraan")
+    print("3. Keluar Parkir")
+    print("4. Laporan Pendapatan")
+    print("5. Exit")
+    print("=" * 40)
