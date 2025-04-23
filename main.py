@@ -2,6 +2,7 @@ import os
 from menu import show_menu
 from parking import tambah_kendaraan, keluar_parkir, list_kendaraan
 from report import laporan_pendapatan
+from membership import handle_membership
 
 def main():
     state = "MENU"
@@ -17,7 +18,8 @@ def main():
                 "2": "LIST_KENDARAAN",
                 "3": "KELUAR_PARKIR",
                 "4": "LAPORAN",
-                "5": "EXIT"
+                "5": "MEMBERSHIP",
+                "6": "EXIT"
             }.get(pilihan, "MENU")
         
         if state == "TAMBAH_KENDARAAN":
@@ -31,6 +33,9 @@ def main():
             state = "MENU"
         elif state == "LAPORAN":
             laporan_pendapatan()
+            state = "MENU"
+        elif state == "MEMBERSHIP":
+            handle_membership()
             state = "MENU"
         elif state == "EXIT":
             print("Terima kasih telah menggunakan layanan parkir!")
