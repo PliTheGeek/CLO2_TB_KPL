@@ -6,5 +6,6 @@ def show_menu():
     print("2. List Kendaraan")
     print("3. Keluar Parkir")
     print("4. Laporan Pendapatan")
-    print("5. Exit")
+    print("5. Membership")
+    print("6. Exit")
     print("=" * 40)
