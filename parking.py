@@ -96,3 +96,11 @@ def keluar_parkir():
             attempts += 1
         print("Plat Nomor Tidak Ditemukan!, denda Rp1.000.000 harus dibayar!")
         laporan["total_pendapatan"] += config["denda_hilang_tidak_terdaftar"]
+def force_keluar_parkir(plat_keluar):
+    for jenis, daftar in parkir.items():
+        for kendaraan in daftar:
+            if kendaraan["plat"] == plat_keluar:
+                daftar.remove(kendaraan)
+                print(f"Kendaraan {plat_keluar} berhasil keluar dari parkiran (mode testing).")
+                return
+    print(f"Kendaraan dengan plat {plat_keluar} tidak ditemukan (mode testing).")
