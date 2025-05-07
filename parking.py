@@ -128,11 +128,11 @@ def keluar_parkir():
             print(f"Total biaya: Rp{biaya:,}")
             return
         else:
-            print("\nKendaraan tidak ditemukan! Pastikan:")
+            print("\nKendaraan Ditemukan!:")
             print(f"- Jenis kendaraan: {jenis}")
             print(f"- Merk kendaraan: {merk}")
             print(f"- Plat nomor: {plat}")
-            print("Silakan coba lagi.")
+            print("  Terimkasih .")
             attempts += 1
     
     print("\nGagal 3 kali, kembali ke menu utama.")
