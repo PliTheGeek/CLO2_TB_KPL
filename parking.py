@@ -29,96 +29,126 @@ def list_kendaraan():
             waktu_masuk = kendaraan["waktu_masuk"].strftime("%Y-%m-%d %H:%M:%S")
             print(f"Merk: {kendaraan['merk']}, Plat: {kendaraan['plat']}, Masuk: {waktu_masuk}")
 
-def keluar_parkir():
-    pilihan = input("Pilih metode keluar: 1. Karcis, 2. Karcis Hilang: ")
-    jenis = input("Masukkan jenis kendaraan (motor/mobil): ").lower()
-    
-    if pilihan == "1":
-        attempts = 0
-        while attempts < 3:
-            merk = input("Masukkan merk kendaraan: ")
-            if any(k["merk"].lower() == merk.lower() for k in parkir.get(jenis, [])):
-                break
-            print("Merk kendaraan tidak ditemukan!")
-            attempts += 1
-        else:
-            print("Gagal 3 kali, kembali ke menu utama.")
-            return
-        
-        attempts = 0
-        while attempts < 3:
-            plat = input("Masukkan nomor plat kendaraan: ").upper()
-            for kendaraan in parkir.get(jenis, []):
-                if kendaraan["plat"] == plat and kendaraan["merk"].lower() == merk.lower():
-                    waktu_masuk = kendaraan["waktu_masuk"]
-                    lama_parkir = datetime.now() - waktu_masuk
-                    jam = lama_parkir.total_seconds() // 3600
-                    biaya = (jam // 2 + 1) * config["tarif"][jenis]
-                    if plat in members_db and members_db[plat].get("status") == "active":
-                        diskon = config.get("diskon_member", 0)
-                        biaya_diskon = int(biaya * (1 - diskon))
-                        print(f"\n=== INFO MEMBER ===")
-                        print(f"Member aktif! Diskon: {diskon * 100}% diterapkan.")
-                        print(f"Biaya normal: Rp{biaya}")
-                        print(f"Biaya setelah diskon: Rp{biaya_diskon}")
-                        biaya = biaya_diskon
+def status_slot_parkir():
+    print("\n=== STATUS SLOT PARKIR ===")
+    for jenis, kapasitas in config["kapasitas"].items():
+        terisi = len(parkir[jenis])
+        sisa = kapasitas - terisi
+        print(f"{jenis.capitalize()}: {terisi}/{kapasitas} (Sisa: {sisa})")
 
-                    laporan["total_pendapatan"] += biaya
-                    parkir[jenis].remove(kendaraan)
-                    print(f"Total biaya parkir: Rp{biaya}")
-                    return
-            print("Plat nomor tidak ditemukan!")
-            attempts += 1
-        print("Gagal 3 kali, kembali ke menu utama.")
-        
-    elif pilihan == "2":
+def keluar_parkir():
+    # Tabel metode keluar
+    metode_keluar = {
+        "1": {"label": "Karcis", "denda": False},
+        "2": {"label": "Karcis Hilang", "denda": True}
+    }
+    
+    print("\n=== METODE KELUAR ===")
+    for key, item in sorted(metode_keluar.items()):
+        print(f"{key}. {item['label']}")
+    
+    pilihan = input("Pilih metode keluar: ")
+    metode = metode_keluar.get(pilihan)
+    
+    if not metode:
+        print("Pilihan tidak valid!")
+        return
+    
+    jenis = input("Masukkan jenis kendaraan (motor/mobil): ").lower()
+    if jenis not in parkir:
+        print("Jenis kendaraan tidak valid!")
+        return
+    
+    # Proses keluar parkir dengan denda atau tanpa denda
+    if metode["denda"]:
+        print("\n=== PROSES KARCIS HILANG ===")
         nama = input("Masukkan Nama Lengkap: ")
         tanggal_lahir = input("Masukkan Tanggal Lahir (YYYY-MM-DD): ")
         alamat = input("Masukkan Alamat: ")
+    
+    attempts = 0
+    while attempts < 3:
+        merk = input("Masukkan merk kendaraan: ").strip().lower()
+        plat = input("Masukkan nomor plat kendaraan: ").strip().upper()
         
-        attempts = 0
-        while attempts < 3:
-            merk = input("Masukkan merk kendaraan: ")
-            if any(k["merk"].lower() == merk.lower() for k in parkir.get(jenis, [])):
+        # Cari kendaraan yang sesuai
+        kendaraan_ditemukan = None
+        for kendaraan in parkir.get(jenis, []):
+            if (kendaraan["merk"].lower() == merk and 
+                kendaraan["plat"].upper() == plat):
+                kendaraan_ditemukan = kendaraan
                 break
-            print("Merk kendaraan tidak ditemukan!")
-            attempts += 1
-        else:
-            print("Plat Nomor Tidak Ditemukan!, denda Rp1.000.000 harus dibayar!")
-            laporan["total_pendapatan"] += config["denda_hilang_tidak_terdaftar"]
-            return
         
-        attempts = 0
-        while attempts < 3:
-            plat = input("Masukkan nomor plat kendaraan: ").upper()
-            for kendaraan in parkir.get(jenis, []):
-                if kendaraan["plat"] == plat and kendaraan["merk"].lower() == merk.lower():
-                    waktu_masuk = kendaraan["waktu_masuk"]
-                    lama_parkir = datetime.now() - waktu_masuk
-                    jam = lama_parkir.total_seconds() // 3600
-                    biaya_parkir = (jam // 2 + 1) * config["tarif"][jenis]
-                    biaya_denda = config["denda"][jenis]
-                    biaya = biaya_parkir + biaya_denda
-                    
-                    # Pengecekan membership (hanya diskon untuk biaya parkir, bukan denda)
-                    if plat in members_db and members_db[plat]["status"] == "active":
-                        diskon = config["diskon_member"]
-                        biaya_parkir_diskon = int(biaya_parkir * (1 - diskon))
-                        biaya = biaya_parkir_diskon + biaya_denda
-                        print(f"\n=== INFO MEMBER ===")
-                        print(f"Member aktif! Diskon {diskon*100}% pada tarif parkir.")
-                        print(f"Biaya parkir normal: Rp{biaya_parkir}")
-                        print(f"Biaya parkir setelah diskon: Rp{biaya_parkir_diskon}")
-                        print(f"Biaya denda tetap: Rp{biaya_denda}")
-                    
-                    laporan["total_pendapatan"] += biaya
-                    parkir[jenis].remove(kendaraan)
-                    print(f"\nTotal biaya parkir + denda: Rp{biaya}")
-                    return
-            print("Plat nomor tidak ditemukan!")
+        if kendaraan_ditemukan:
+            waktu_masuk = kendaraan_ditemukan["waktu_masuk"]
+            lama_parkir = datetime.now() - waktu_masuk
+            jam = lama_parkir.total_seconds() // 3600
+            biaya_parkir = (jam // 2 + 1) * config["tarif"][jenis]
+            
+            # Hitung biaya total
+            if metode["denda"]:
+                biaya_denda = config["denda"][jenis]
+                biaya = biaya_parkir + biaya_denda
+                keterangan = f"Parkir {jam} jam + Denda Karcis Hilang"
+            else:
+                biaya = biaya_parkir
+                keterangan = f"Parkir {jam} jam"
+            
+            # Pengecekan membership
+            if plat in members_db and members_db[plat].get("status") == "active":
+                diskon = config["diskon_member"]
+                biaya_parkir_diskon = int(biaya_parkir * (1 - diskon))
+                biaya = biaya_parkir_diskon + (biaya_denda if metode["denda"] else 0)
+                print(f"\n=== INFO MEMBER ===")
+                print(f"Member aktif! Diskon {diskon*100}% pada tarif parkir.")
+                print(f"Biaya parkir normal: Rp{biaya_parkir:,}")
+                print(f"Biaya parkir setelah diskon: Rp{biaya_parkir_diskon:,}")
+                if metode["denda"]:
+                    print(f"Biaya denda tetap: Rp{biaya_denda:,}")
+            
+            laporan["total_pendapatan"] += biaya
+            parkir[jenis].remove(kendaraan_ditemukan)
+            
+            # Catat transaksi
+            laporan["riwayat_transaksi"].append({
+                "jenis": jenis,
+                "plat": plat,
+                "jumlah": biaya,
+                "keterangan": keterangan,
+                "waktu": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "nama": nama if metode["denda"] else None,
+                "metode": "Karcis Hilang" if metode["denda"] else "Normal"
+            })
+            
+            print(f"\n=== RINCIAN BIAYA ===")
+            print(f"Lama parkir: {jam} jam")
+            if metode["denda"]:
+                print(f"Biaya parkir: Rp{biaya_parkir:,}")
+                print(f"Biaya denda: Rp{biaya_denda:,}")
+            print(f"Total biaya: Rp{biaya:,}")
+            return
+        else:
+            print("\nKendaraan tidak ditemukan! Pastikan:")
+            print(f"- Jenis kendaraan: {jenis}")
+            print(f"- Merk kendaraan: {merk}")
+            print(f"- Plat nomor: {plat}")
+            print("Silakan coba lagi.")
             attempts += 1
-        print("Plat Nomor Tidak Ditemukan!, denda Rp1.000.000 harus dibayar!")
+    
+    print("\nGagal 3 kali, kembali ke menu utama.")
+    if metode["denda"]:
+        print("Denda Rp1.000.000 harus dibayar karena kendaraan tidak terdaftar!")
         laporan["total_pendapatan"] += config["denda_hilang_tidak_terdaftar"]
+        laporan["riwayat_transaksi"].append({
+            "jenis": "denda",
+            "plat": "Tidak Diketahui",
+            "jumlah": config["denda_hilang_tidak_terdaftar"],
+            "keterangan": "Denda kendaraan tidak terdaftar",
+            "waktu": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "nama": nama,
+            "metode": "Karcis Hilang"
+        })
+
 def force_keluar_parkir(plat_keluar):
     for jenis, daftar in parkir.items():
         for kendaraan in daftar:
