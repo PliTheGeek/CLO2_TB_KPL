@@ -1,8 +1,9 @@
 import os
 from menu import show_menu
-from parking import tambah_kendaraan, keluar_parkir, list_kendaraan
-from report import laporan_pendapatan
+from parking import tambah_kendaraan, keluar_parkir, list_kendaraan, status_slot_parkir
+from report import laporan_pendapatan, riwayat_transaksi
 from membership import handle_membership
+from database import main_menu_table
 
 def main():
     state = "MENU"
@@ -13,14 +14,8 @@ def main():
             show_menu()
             pilihan = input("Pilih menu: ")
             
-            state = {
-                "1": "TAMBAH_KENDARAAN",
-                "2": "LIST_KENDARAAN",
-                "3": "KELUAR_PARKIR",
-                "4": "LAPORAN",
-                "5": "MEMBERSHIP",
-                "6": "EXIT"
-            }.get(pilihan, "MENU")
+            # Menggunakan tabel untuk menentukan state berikutnya
+            state = main_menu_table.get(pilihan, {}).get("action", "MENU")
         
         if state == "TAMBAH_KENDARAAN":
             tambah_kendaraan()
@@ -36,6 +31,12 @@ def main():
             state = "MENU"
         elif state == "MEMBERSHIP":
             handle_membership()
+            state = "MENU"
+        elif state == "RIWAYAT":
+            riwayat_transaksi()
+            state = "MENU"
+        elif state == "STATUS_SLOT":
+            status_slot_parkir()
             state = "MENU"
         elif state == "EXIT":
             print("Terima kasih telah menggunakan layanan parkir!")
